@@ -41,6 +41,33 @@ uvicorn app.main:app --reload
 
 После запуска сервис будет доступен на `http://127.0.0.1:8000`.
 
+## Deploy on Render
+
+Проект подготовлен для деплоя на Render через [`render.yaml`](render.yaml).
+
+1. Запушьте актуальный код в GitHub.
+2. Откройте Render и создайте новый Blueprint или Web Service из этого репозитория.
+3. Если создаёте сервис вручную, используйте:
+   - Runtime: `Python`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Health Check Path: `/health`
+4. Добавьте переменные окружения из `.env.example` в Render dashboard:
+   - `NOTION_TOKEN`
+   - `NOTION_11_DATABASE_ID`
+   - `NOTION_REPORTS_DATABASE_ID`
+   - `LLM_BASE_URL`
+   - `LLM_API_KEY`
+   - `LLM_MODEL`
+   - `READAI_WEBHOOK_SECRET`
+   - `TEAM_MAPPING`
+5. После успешного деплоя получите публичный URL сервиса:
+   - health check: `https://<your-service>.onrender.com/health`
+   - Read AI webhook: `https://<your-service>.onrender.com/webhook/readai`
+   - test webhook: `https://<your-service>.onrender.com/webhook/test`
+
+Перед подключением Read AI проверьте `POST /webhook/test`, чтобы убедиться, что Notion и LLM credentials работают корректно.
+
 ## Переменные окружения
 
 Пример лежит в `.env.example`:
@@ -53,7 +80,7 @@ LLM_BASE_URL=
 LLM_API_KEY=
 LLM_MODEL=
 READAI_WEBHOOK_SECRET=
-TEAM_MAPPING={"Дмитрий Такмаков":"notion_page_id","Максим Рылов":"notion_page_id","Алина Крючкова":"notion_page_id"}
+TEAM_MAPPING={"participant_a":"notion_page_id","participant_b":"notion_page_id","participant_c":"notion_page_id"}
 ```
 
 Назначение:
@@ -126,11 +153,11 @@ curl -X POST http://127.0.0.1:8000/webhook/test \
   -H "Content-Type: application/json" \
   -d '{
     "participants": [
-      {"name": "Менеджер"},
-      {"name": "Дмитрий Такмаков"}
+      {"name": "Participant A"},
+      {"name": "Participant B"}
     ],
     "summary": "Обсудили статус проектов и планы на квартал.",
-    "transcript": "Менеджер: Как дела по проекту? Дмитрий: Основной риск закрываем к пятнице.",
+    "transcript": "Participant A: Как дела по проекту? Participant B: Основной риск закрываем к пятнице.",
     "start_time": "2026-03-31T09:00:00Z"
   }'
 ```
