@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Literal
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -47,8 +48,9 @@ class NotionPageResult(BaseModel):
 
 
 class WebhookResult(BaseModel):
-    status: str = "ok"
-    report_name: str
-    notion_page_id: str
+    status: Literal["ok", "skipped"] = "ok"
+    report_name: str | None = None
+    notion_page_id: str | None = None
     notion_url: str | None = None
-    meeting_date: date
+    meeting_date: date | None = None
+    skip_reason: str | None = None

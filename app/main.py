@@ -11,6 +11,8 @@ from app.models import WebhookResult
 from app.services.llm import LLMService
 from app.services.notion import NotionService
 from app.services.readai import (
+    get_human_participants,
+    is_one_on_one_meeting,
     load_json_body,
     parse_payload,
     resolve_report_participant,
@@ -74,7 +76,22 @@ async def _process_payload(payload: dict[str, Any], source: str) -> WebhookResul
 
     try:
         meeting = parse_payload(payload)
-        report_name, report_page_id = resolve_report_participant(meeting.participants, settings)
+        human_participants = get_human_participants(meeting.participants)
+        if not is_one_on_one_meeting(meeting.participants):
+            logger.info(
+                "webhook_skipped_non_one_on_one",
+                source=source,
+                meeting_date=meeting.meeting_date.isoformat(),
+                participant_count=len(human_participants),
+                participants=[participant.name for participant in human_participants],
+            )
+            return WebhookResult(
+                status="skipped",
+                meeting_date=meeting.meeting_date,
+                skip_reason="Meeting is not a 1:1",
+            )
+
+        report_name, report_page_id = resolve_report_participant(human_participants, settings)
     except ValueError as exc:
         logger.warning("payload_validation_failed", source=source, error=str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -84,7 +101,7 @@ async def _process_payload(payload: dict[str, Any], source: str) -> WebhookResul
         source=source,
         report_name=report_name,
         meeting_date=meeting.meeting_date.isoformat(),
-        participant_count=len(meeting.participants),
+        participant_count=len(human_participants),
     )
 
     llm_service = LLMService(settings)

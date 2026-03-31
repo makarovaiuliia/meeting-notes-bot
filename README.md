@@ -8,6 +8,7 @@ Python-сервер на FastAPI, который принимает webhook от
 - `POST /webhook/test` позволяет отправлять тестовый payload без подписи
 - `GET /health` возвращает статус сервиса
 - Из payload извлекаются `participants`, `transcript`, `summary`
+- Страница в Notion создаётся только для встреч формата `1:1`; остальные webhook'и пропускаются со статусом `skipped`
 - Транскрипт и саммари отправляются в LLM через LiteLLM gateway
 - По `TEAM_MAPPING` определяется репорт и создаётся страница в базе Notion `1:1 Management`
 

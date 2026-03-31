@@ -15,6 +15,12 @@ from app.models import ParsedMeeting, Participant, ReadAIWebhookPayload
 
 DATETIME_ADAPTER = TypeAdapter(datetime)
 DATE_ADAPTER = TypeAdapter(date)
+SYSTEM_PARTICIPANT_MARKERS = (
+    "read ai",
+    "readai",
+    "notetaker",
+    "note taker",
+)
 
 
 def verify_signature(secret: str, body: bytes, provided_signature: str | None) -> bool:
@@ -76,6 +82,26 @@ def resolve_report_participant(
     )
 
 
+def get_human_participants(participants: list[Participant]) -> list[Participant]:
+    human_participants: list[Participant] = []
+    seen_names: set[str] = set()
+
+    for participant in participants:
+        normalized_name = normalize_name(participant.name)
+        if not normalized_name or _is_system_participant(normalized_name):
+            continue
+        if normalized_name in seen_names:
+            continue
+        seen_names.add(normalized_name)
+        human_participants.append(participant)
+
+    return human_participants
+
+
+def is_one_on_one_meeting(participants: list[Participant]) -> bool:
+    return len(get_human_participants(participants)) == 2
+
+
 def _extract_participants(
     payload: ReadAIWebhookPayload,
     raw_payload: dict[str, Any],
@@ -108,6 +134,10 @@ def _coerce_participant(value: Any) -> Participant | None:
                 return Participant(name=candidate.strip(), email=_extract_email(value))
 
     return None
+
+
+def _is_system_participant(normalized_name: str) -> bool:
+    return any(marker in normalized_name for marker in SYSTEM_PARTICIPANT_MARKERS)
 
 
 def _extract_email(value: dict[str, Any]) -> str | None:
