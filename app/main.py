@@ -56,7 +56,10 @@ async def readai_webhook(
     settings = get_settings()
     body = await request.body()
 
-    if not verify_signature(settings.readai_webhook_secret, body, x_read_signature):
+    if (
+        not settings.readai_skip_signature_verification
+        and not verify_signature(settings.readai_webhook_secret, body, x_read_signature)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid Read AI signature",

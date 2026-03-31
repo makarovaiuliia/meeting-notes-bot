@@ -61,6 +61,7 @@ uvicorn app.main:app --reload
    - `LLM_API_KEY`
    - `LLM_MODEL`
    - `READAI_WEBHOOK_SECRET`
+   - `READAI_SKIP_SIGNATURE_VERIFICATION`
    - `TEAM_MAPPING`
 5. После успешного деплоя получите публичный URL сервиса:
    - health check: `https://<your-service>.onrender.com/health`
@@ -81,6 +82,7 @@ LLM_BASE_URL=
 LLM_API_KEY=
 LLM_MODEL=
 READAI_WEBHOOK_SECRET=
+READAI_SKIP_SIGNATURE_VERIFICATION=false
 TEAM_MAPPING={"participant_a":"notion_page_id","participant_b":"notion_page_id","participant_c":"notion_page_id"}
 ```
 
@@ -93,6 +95,7 @@ TEAM_MAPPING={"participant_a":"notion_page_id","participant_b":"notion_page_id",
 - `LLM_API_KEY` - ключ для LiteLLM gateway
 - `LLM_MODEL` - модель, которую gateway должен вызвать
 - `READAI_WEBHOOK_SECRET` - `signing key` из настроек webhook в Read AI; если он в base64, сервис сам его декодирует
+- `READAI_SKIP_SIGNATURE_VERIFICATION` - временный bypass для первичной настройки webhook; в production должен быть `false`
 - `TEAM_MAPPING` - JSON-объект `имя -> Notion page ID` для репортов
 
 ## Настройка Notion integration
@@ -133,6 +136,8 @@ POST /webhook/readai
 - JSON body с данными встречи
 
 Подпись проверяется как HMAC SHA-256 от raw body с `READAI_WEBHOOK_SECRET`. Если Read AI выдаёт signing key в base64, сервис сначала декодирует его и затем проверяет подпись.
+
+Если вы ещё не получили signing key и Read AI не даёт сохранить webhook из-за `401`, можно временно выставить `READAI_SKIP_SIGNATURE_VERIFICATION=true`, создать webhook, скопировать signing key из Read AI, затем записать его в `READAI_WEBHOOK_SECRET`, вернуть `READAI_SKIP_SIGNATURE_VERIFICATION=false` и сделать redeploy.
 
 Поддерживаются типовые поля payload:
 

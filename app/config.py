@@ -16,6 +16,20 @@ def _require_env(name: str) -> str:
     return value.strip()
 
 
+def _get_env(name: str, default: str = "") -> str:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip()
+
+
+def _parse_bool_env(name: str, default: bool = False) -> bool:
+    value = _get_env(name)
+    if not value:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 def _parse_team_mapping(raw_value: str) -> dict[str, str]:
     try:
         parsed = json.loads(raw_value)
@@ -46,6 +60,7 @@ class Settings:
     llm_api_key: str
     llm_model: str
     readai_webhook_secret: str
+    readai_skip_signature_verification: bool
     team_mapping: dict[str, str]
 
     @property
@@ -65,6 +80,7 @@ def get_settings() -> Settings:
         llm_base_url=_require_env("LLM_BASE_URL").rstrip("/"),
         llm_api_key=_require_env("LLM_API_KEY"),
         llm_model=_require_env("LLM_MODEL"),
-        readai_webhook_secret=_require_env("READAI_WEBHOOK_SECRET"),
+        readai_webhook_secret=_get_env("READAI_WEBHOOK_SECRET"),
+        readai_skip_signature_verification=_parse_bool_env("READAI_SKIP_SIGNATURE_VERIFICATION"),
         team_mapping=_parse_team_mapping(_require_env("TEAM_MAPPING")),
     )
