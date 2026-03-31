@@ -9,6 +9,7 @@ Python-сервер на FastAPI, который принимает webhook от
 - `GET /health` возвращает статус сервиса
 - Из payload извлекаются `participants`, `transcript`, `summary`
 - Страница в Notion создаётся только для встреч формата `1:1`; остальные webhook'и пропускаются со статусом `skipped`
+- Если в webhook Read AI никто из участников не найден в `TEAM_MAPPING`, запрос тоже завершается со статусом `skipped`, чтобы тестовые payload'ы Read AI проходили с `2xx`
 - Транскрипт и саммари отправляются в LLM через LiteLLM gateway
 - По `TEAM_MAPPING` определяется репорт и создаётся страница в базе Notion `1:1 Management`
 

@@ -76,6 +76,7 @@ async def test_webhook(payload: dict[str, Any]) -> WebhookResult:
 
 async def _process_payload(payload: dict[str, Any], source: str) -> WebhookResult:
     settings = get_settings()
+    meeting = None
 
     try:
         meeting = parse_payload(payload)
@@ -96,6 +97,19 @@ async def _process_payload(payload: dict[str, Any], source: str) -> WebhookResul
 
         report_name, report_page_id = resolve_report_participant(human_participants, settings)
     except ValueError as exc:
+        if source == "readai" and meeting is not None:
+            logger.info(
+                "webhook_skipped_unknown_participant",
+                source=source,
+                meeting_date=meeting.meeting_date.isoformat(),
+                participants=[participant.name for participant in meeting.participants],
+                error=str(exc),
+            )
+            return WebhookResult(
+                status="skipped",
+                meeting_date=meeting.meeting_date,
+                skip_reason="No participant matched TEAM_MAPPING",
+            )
         logger.warning("payload_validation_failed", source=source, error=str(exc))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
