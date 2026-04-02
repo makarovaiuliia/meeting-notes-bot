@@ -34,12 +34,18 @@ class ParsedMeeting(BaseModel):
     raw_payload: dict[str, Any]
 
 
+class ActionItem(BaseModel):
+    title: str
+    assignee: str
+
+
 class LLMSummary(BaseModel):
     summary: str
     observations: list[str] = Field(default_factory=list)
     decisions: list[str] = Field(default_factory=list)
     mood: str | None = None
     topics: list[str] = Field(default_factory=list)
+    action_items: list[ActionItem] = Field(default_factory=list)
 
 
 class NotionPageResult(BaseModel):

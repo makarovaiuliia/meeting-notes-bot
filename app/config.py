@@ -56,6 +56,7 @@ class Settings:
     notion_token: str
     notion_11_database_id: str
     notion_reports_database_id: str
+    notion_tasks_database_id: str
     llm_base_url: str
     llm_api_key: str
     llm_model: str
@@ -77,6 +78,7 @@ def get_settings() -> Settings:
         notion_token=_require_env("NOTION_TOKEN"),
         notion_11_database_id=_require_env("NOTION_11_DATABASE_ID"),
         notion_reports_database_id=_require_env("NOTION_REPORTS_DATABASE_ID"),
+        notion_tasks_database_id=_require_env("NOTION_TASKS_DATABASE_ID"),
         llm_base_url=_require_env("LLM_BASE_URL").rstrip("/"),
         llm_api_key=_require_env("LLM_API_KEY"),
         llm_model=_require_env("LLM_MODEL"),

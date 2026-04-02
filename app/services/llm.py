@@ -10,11 +10,13 @@ from app.models import LLMSummary
 
 SYSTEM_PROMPT = (
     "Ты анализируешь транскрипты 1:1 встреч менеджера с репортом. "
-    "Верни строго JSON с полями summary, observations, decisions, mood, topics. "
+    "Верни строго JSON с полями summary, observations, decisions, mood, topics, action_items. "
     "summary должен быть кратким саммари на русском языке. "
     "observations и decisions должны быть массивами строк. "
     "mood должен быть одним словом, без запятых и без пояснений. "
-    "topics должен быть массивом очень коротких тем, каждая тема 1-2 слова максимум."
+    "topics должен быть массивом очень коротких тем, каждая тема 1-2 слова максимум. "
+    "action_items должен быть массивом объектов с полями title и assignee. "
+    "ВАЖНО: в action_items включай ТОЛЬКО задачи для менеджера, НЕ включай задачи для репорта."
 )
 
 
@@ -59,10 +61,13 @@ class LLMService:
     def _build_user_prompt(self, transcript: str, source_summary: str | None) -> str:
         prompt = (
             "Это транскрипт 1:1 встречи. Сделай краткое саммари на русском языке: "
-            "основные наблюдения, ключевые решения, настроение встречи и темы. "
-            "Верни JSON с полями: summary, observations[], decisions[], mood, topics[].\n"
+            "основные наблюдения, ключевые решения, настроение встречи, темы и задачи. "
+            "Верни JSON с полями: summary, observations[], decisions[], mood, topics[], action_items[].\n"
             "Требования: mood — одно слово, без запятых. "
-            "Каждый элемент topics — очень короткий, 1-2 слова максимум, без запятых.\n\n"
+            "Каждый элемент topics — очень короткий, 1-2 слова максимум, без запятых. "
+            "action_items — массив объектов [{title: str, assignee: str}], где title — задача, assignee — имя ответственного. "
+            "ВАЖНО: в action_items включай ТОЛЬКО задачи ДЛЯ МЕНЕДЖЕРА (например 'поговорить с HR', 'подготовить документ'). "
+            "НЕ включай задачи для репорта (например 'завершить фичу', 'написать тесты').\n\n"
         )
         if source_summary:
             prompt += f"Саммари от Read AI:\n{source_summary}\n\n"
